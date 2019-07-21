@@ -1,0 +1,220 @@
+import ShefRobot.*;
+public class Assignment3 {
+	
+	//DECLARING METHODS HERE
+	public static void findBlackLine(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.setSpeed(250);
+		MediumMotor.setSpeed(250);
+		LargeMotor.forward();
+		MediumMotor.forward();
+	}
+	
+	public static void moveLeftOnLine(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.setSpeed(220);
+		MediumMotor.setSpeed(0);
+		LargeMotor.forward();
+		MediumMotor.forward();
+		myRobot.sleep(5);
+	}
+	
+	public static void moveRightOnLine(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.setSpeed(0);
+		MediumMotor.setSpeed(220);
+		LargeMotor.forward();
+		MediumMotor.forward();
+		myRobot.sleep(5);
+	}
+	
+	public static void moveRightOnColour(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.setSpeed(70);
+		MediumMotor.setSpeed(0);
+		LargeMotor.forward();
+		MediumMotor.forward();
+		myRobot.sleep(5);
+	}
+	
+	public static void moveLeftOnColour(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.setSpeed(0);
+		MediumMotor.setSpeed(70);
+		LargeMotor.forward();
+		MediumMotor.forward();
+		myRobot.sleep(5);
+	}
+	
+	public static void sing(Robot myRobot, Speaker mySpeaker) {
+		final int TONE_TIME = 200;
+		mySpeaker.setVolume(100);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(2050, TONE_TIME);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(250, TONE_TIME);
+		mySpeaker.playTone(1170, TONE_TIME);
+		mySpeaker.playTone(7000, TONE_TIME);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(2050, TONE_TIME);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(250, TONE_TIME);
+		mySpeaker.playTone(1170, TONE_TIME);
+		mySpeaker.playTone(7000, TONE_TIME);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(2050, TONE_TIME);
+		mySpeaker.playTone(130, TONE_TIME);
+		mySpeaker.playTone(250, TONE_TIME);
+		mySpeaker.playTone(1170, TONE_TIME);
+		mySpeaker.playTone(7000, TONE_TIME);
+	}
+	
+	public static void dance(Robot myRobot, Motor LargeMotor, Motor MediumMotor) {
+		LargeMotor.stop();
+		MediumMotor.setSpeed(1000);
+		MediumMotor.forward();
+		myRobot.sleep(3000);
+		MediumMotor.stop();
+		LargeMotor.setSpeed(1000);
+		LargeMotor.forward();
+		myRobot.sleep(3000);
+		LargeMotor.stop();
+	}
+	
+	public static void traverseBlackLine(Robot myRobot, Motor LargeMotor, Motor MediumMotor, ColorSensor mySensor) {
+		//if the robot detects black then it re-adjusts its position so that it follows the edge of the black line
+		if (mySensor.getColor() == ColorSensor.Color.BLACK) {
+			moveLeftOnLine(myRobot, LargeMotor, MediumMotor);
+		}
+		//if the robot detects white then it re-adjusts its position so that it follows the edge of the black line
+		if (mySensor.getColor() == ColorSensor.Color.WHITE) {
+			moveRightOnLine(myRobot, LargeMotor, MediumMotor);
+		}
+	}
+	
+	public static void traverseColour(Robot myRobot, Motor LargeMotor, Motor MediumMotor, ColorSensor mySensor, int count) {
+		//robot uses modulus calculation to alternate the turning direction whilst on a colour
+		while (mySensor.getColor() != ColorSensor.Color.BLACK) {
+			
+			if (count % 2 == 0) {
+				if ((mySensor.getColor() != ColorSensor.Color.BLACK) &&
+				(mySensor.getColor() != ColorSensor.Color.WHITE)){
+					moveRightOnColour(myRobot, LargeMotor, MediumMotor);
+				}
+
+				if (mySensor.getColor() == ColorSensor.Color.WHITE) {
+					moveLeftOnColour(myRobot, LargeMotor, MediumMotor);
+				}
+			}
+			else {
+
+				if ((mySensor.getColor() != ColorSensor.Color.BLACK) &&
+				(mySensor.getColor() != ColorSensor.Color.WHITE )){
+					moveLeftOnColour(myRobot, LargeMotor, MediumMotor);
+				}
+
+				if (mySensor.getColor() == ColorSensor.Color.WHITE) {
+					moveRightOnColour(myRobot, LargeMotor, MediumMotor);
+				}
+			}
+		}
+	}
+	
+	//MAIN METHOD STARTS HERE
+	public static void main(String[] args) {
+		//The robot object is created
+		Robot myRobot = new Robot();
+		//Assigns object variables for each of the robot's features we require to use
+		//Speaker object is needed so the robot can "sing"
+		Speaker mySpeaker = myRobot.getSpeaker();
+		//motor objects are needed so the robot can move
+		Motor LargeMotor = myRobot.getLargeMotor(Motor.Port.A);
+		Motor MediumMotor = myRobot.getLargeMotor(Motor.Port.B);
+		//Coloursensor object is needed so the robot can detect colours
+		ColorSensor mySensor = myRobot.getColorSensor(Sensor.Port.S1);
+		
+		//Creates an array that stores te colours the robot detects
+		ColorSensor.Color[] stored = new ColorSensor.Color[20];
+		//This count is used so that the robot can create alter its turning direction each time it reaches a colour
+		int count = 0;
+		//boolean value to check whether robot has finished its journey back to original colour spotted
+		boolean backTrack = false;
+		//boolean value to check if a colour found is already in the stored array
+		boolean inArray = false;
+		//boolean value to check if the program has reached a finished state
+		boolean finished = false;
+		//boolen which checks if robot has reached a different instance of the colour it is currently on
+		boolean colourDetectedAgain = false; 
+		
+		//Robot continues to move forward until it reaches a black line
+		while ((mySensor.getColor() != ColorSensor.Color.BLACK)) {
+			findBlackLine(myRobot, LargeMotor, MediumMotor);
+		}
+		
+		//robot loops through this while loop as long as the finished state has not been reached
+		while (finished != true) {
+			inArray = false;
+			
+			traverseBlackLine(myRobot, LargeMotor, MediumMotor, mySensor);
+			
+			//robot detects a colour and checks if it is already in array
+			if  ((mySensor.getColor() != ColorSensor.Color.BLACK) &&
+			(mySensor.getColor() != ColorSensor.Color.WHITE) &&
+			(mySensor.getColor() != ColorSensor.Color.BROWN) &&
+			(mySensor.getColor() != ColorSensor.Color.BLUE)) {
+			
+          		LargeMotor.stop();
+          		MediumMotor.stop();
+
+          		for (int i = 0; i<20; i++) {
+          			if (stored[i] == mySensor.getColor()) {
+          				inArray = true; 
+          			}
+          		}
+          		
+          		//remove me
+          		for (int i = 0; i<20; i++) {
+          			System.out.println(stored[i]);
+          		}
+          		
+          		//robot detects a colour and stores it in array
+          		if ((mySensor.getColor() != ColorSensor.Color.BROWN) &&
+          		(mySensor.getColor() != ColorSensor.Color.BLUE) &&
+          		(mySensor.getColor() != ColorSensor.Color.BLACK) &&
+          		(mySensor.getColor() != ColorSensor.Color.WHITE) &&
+          		(inArray == false)) {
+
+          			stored[count] = mySensor.getColor();
+          			count++;
+          			traverseColour(myRobot, LargeMotor, MediumMotor, mySensor, count);
+				}
+			}
+			
+			//Following code is run when a colour has been spotted twice
+			if (inArray == true) {
+				sing(myRobot, mySpeaker);
+				//creates an object for the repeated colour the robot has detected
+				ColorSensor.Color secondColour = mySensor.getColor();
+				
+				//Robot traverses grid until it reaches the "original colour"
+				while (backTrack != true) {
+
+					traverseBlackLine(myRobot, LargeMotor, MediumMotor, mySensor);
+					
+					//When robot detects original colour it stops and dances
+					if (mySensor.getColor() == secondColour && colourDetectedAgain == true) {
+						backTrack = true;
+						dance(myRobot, LargeMotor, MediumMotor);
+					}
+
+					if ((mySensor.getColor() != ColorSensor.Color.BLACK) &&
+						(mySensor.getColor() != ColorSensor.Color.WHITE) &&
+						(mySensor.getColor() != ColorSensor.Color.BROWN) &&
+						(mySensor.getColor() != ColorSensor.Color.BLUE &&
+						 backTrack == false)) {
+						 count++;
+						
+						traverseColour(myRobot, LargeMotor, MediumMotor, mySensor, count);
+						colourDetectedAgain = true; 
+					}
+				}
+				finished = true;
+			}
+		}
+	}
+}
